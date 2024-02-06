@@ -10,7 +10,7 @@ export default async function Page() {
   return (
     <div>
       <HomePage dictData={data} />
-      {<div>{Object.keys(dict)}</div>}
+      { /*<div>{Object.keys(dict)}</div> */}
     </div>
   );
 }

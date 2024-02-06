@@ -1,6 +1,7 @@
 'use client'
 
 import { useEffect, useState, useRef } from "react";
+import GameTimer from "@/components/game-timer";
  
 
 // return true if the word is a complete word
@@ -32,17 +33,17 @@ function findNextLetters(word, words_trie) {
 
 //return a randam lowercase letter
 function getRandomLetter() {
-    var alphabet = "abcdefghijklmnopqrstuvwxyz";
+    var alphabet = "ABCDEFGHIJKLMNOPQRSTUVWXYZ";
     var randomLetter = alphabet[Math.floor(Math.random() * alphabet.length)];
 
     return randomLetter;
 }
   
 //return and array of the letter buttons that update the current word on click
-function renderLetterButtons(optionsArray, currentWord, setCurrentWord) {
+function renderLetterButtons(optionsArray, currentWord, setCurrentWord, setAwaitingGuess) {
     let letterButtons = []
     for (const letter of optionsArray) {
-        letterButtons.push(<button class="w-12 h-12" onClick={() => {setCurrentWord(currentWord + letter)}}>{letter}</button>)
+        letterButtons.push(<button class="w-12 h-12" onClick={() => {setAwaitingGuess(true);setCurrentWord(currentWord + letter)}}>{letter}</button>)
     }
     return letterButtons
 }
@@ -64,9 +65,11 @@ export default function HomePage({ dictData }) {
     const [gameStarted, setGameStarted] = useState(false);
     const [nextOptions, setNextOptions] = useState([]);
     const [endWord, setEndWord] = useState(false);
+    const [awaitingGuess, setAwaitingGuess] = useState(false);
 
     //if the game has been started then once current word is changed trigger
     useEffect(() => {
+        console.log(gameStarted);
         if (gameStarted) {
 
             //check if the word is long enough and a full word and if it is then trigger the end word effect
@@ -133,10 +136,16 @@ export default function HomePage({ dictData }) {
             <div>Current score: {currentScore}</div>
 
             {/* button that starts the game by setting current word to a random letter and then disappears */}
-            <button onClick={() => {setCurrentWord(getRandomLetter()); setGameStarted(true)}} className={`${gameStarted ? "hidden" : "visible"}`} >Start Game</button>
+            <button onClick={() => {setCurrentWord(getRandomLetter());setGameStarted(true);}} className={`${gameStarted ? "hidden" : "visible"}`} >Start Game</button>
 
             <div className={`${gameStarted ? "visible" : "hidden"}`}>
-                {renderLetterButtons(nextOptions, currentWord, setCurrentWord)}
+                <GameTimer setGameStarted={setGameStarted} gameStarted={gameStarted}/>
+                <div className={`${awaitingGuess ? "hidden" : "visible"}`}>
+                    {renderLetterButtons(nextOptions, currentWord, setCurrentWord, setAwaitingGuess)}
+                </div>
+                <div className={`${awaitingGuess ? "visible" : "hidden"}`}>
+                    
+                </div>
             </div>
         </div>
     )
