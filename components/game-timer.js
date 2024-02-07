@@ -15,7 +15,6 @@ export default function GameTimer({setGameStarted, gameStarted}) {
                         setTime(60)
                         setGameStarted(false);
                     } else {
-                        lastTimerCount <= 0 && clearInterval(interval)
                         return lastTimerCount - 1
                     }
                 })

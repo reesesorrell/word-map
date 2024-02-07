@@ -2,6 +2,8 @@
 
 import { useEffect, useState, useRef } from "react";
 import GameTimer from "@/components/game-timer";
+import GuessTaker from "@/components/guess-taker";
+import GiveUpButton from "@/components/give-up-button";
  
 
 // return true if the word is a complete word
@@ -48,12 +50,24 @@ function renderLetterButtons(optionsArray, currentWord, setCurrentWord, setAwait
     return letterButtons
 }
 
-function calculateScore(wordLength) {
-    if (wordLength <= 4) {
-        return 1;
+function calculateScore(wordLength, gaveUp, setGaveUp) {
+    if (gaveUp) {
+        setGaveUp(false);
+        if (wordLength <= 3) {
+            return 0;
+        }
+        else {
+            return ((wordLength - 3))
+        }
     }
+    
     else {
-        return ((wordLength - 3)**2)
+        if (wordLength <= 3) {
+            return 0;
+        }
+        else {
+            return ((wordLength - 3) + 3)
+        }
     }
 }
 
@@ -66,6 +80,8 @@ export default function HomePage({ dictData }) {
     const [nextOptions, setNextOptions] = useState([]);
     const [endWord, setEndWord] = useState(false);
     const [awaitingGuess, setAwaitingGuess] = useState(false);
+    const [gaveUp, setGaveUp] = useState(false);
+    const [highScore, setHighScore] = useState(0);
 
     //if the game has been started then once current word is changed trigger
     useEffect(() => {
@@ -103,6 +119,10 @@ export default function HomePage({ dictData }) {
                     // Get sub-array of first n elements after shuffled
                     let selected = shuffled.slice(0, 2);
 
+                    if (currentWord.length == 1 && currentWord[0] == 'Q' && selected[1] != "U") {
+                        selected[0] = "U";
+                    }
+
                     console.log("picked these two: ")
                     console.log(selected);
                     
@@ -119,21 +139,42 @@ export default function HomePage({ dictData }) {
         }
     }, [currentWord])
 
+    //once a guess is submitted checks to see if the current word is the same as the guess and if it is it skips the guessing stage
+    useEffect(() => {
+        if (awaitingGuess && currentGuess.length > 0 && (currentWord == currentGuess.slice(0, currentWord.length))) {
+            setAwaitingGuess(false);
+        }
+    }, [awaitingGuess])
+
     //if the word is ended then add 1 to the score and reset the current word
     useEffect(() => {
         if (gameStarted && endWord) {
             console.log("ending the word")
-            setCurrentScore(currentScore + calculateScore(currentWord.length));
+            setCurrentScore(currentScore + calculateScore(currentWord.length, gaveUp, setGaveUp));
             setCurrentWord(getRandomLetter());
             setEndWord(false);
+            setCurrentGuess("");
+            setAwaitingGuess(false);
         }
     }, [endWord])
 
+    //reset score to 0 when game starts
+    useEffect(() => {
+        if (gameStarted) {
+            setCurrentScore(0);
+        }
+        else {
+            setHighScore(Math.max(currentScore, highScore));
+        }
+    }, [gameStarted])
+
     return (
         <div>
-            <div>Current word: {currentWord}</div>
-            <div>Current guess: {currentGuess}</div>
+            <div>High score: {highScore}</div>
             <div>Current score: {currentScore}</div>
+            <div>Current guess: {currentGuess}</div>
+            <div>Current word: {currentWord}</div>
+            
 
             {/* button that starts the game by setting current word to a random letter and then disappears */}
             <button onClick={() => {setCurrentWord(getRandomLetter());setGameStarted(true);}} className={`${gameStarted ? "hidden" : "visible"}`} >Start Game</button>
@@ -144,8 +185,9 @@ export default function HomePage({ dictData }) {
                     {renderLetterButtons(nextOptions, currentWord, setCurrentWord, setAwaitingGuess)}
                 </div>
                 <div className={`${awaitingGuess ? "visible" : "hidden"}`}>
-                    
+                    <GuessTaker currentWord={currentWord} setCurrentGuess={setCurrentGuess} inDictionary={inDictionary} wordTrie={dictData} setAwaitingGuess={setAwaitingGuess}/>
                 </div>
+                <GiveUpButton setEndWord={setEndWord} setAwaitingGuess={setAwaitingGuess} setGaveUp={setGaveUp}/>
             </div>
         </div>
     )

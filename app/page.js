@@ -8,7 +8,7 @@ export default async function Page() {
   const dict = data['S']['T']['A']['R']
 
   return (
-    <div>
+    <div className='ml-20 mt-20'>
       <HomePage dictData={data} />
       { /*<div>{Object.keys(dict)}</div> */}
     </div>
